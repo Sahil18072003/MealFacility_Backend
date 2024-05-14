@@ -28,7 +28,7 @@ namespace MealFacility_Backend.Controllers
         {
             if (userObj == null)
             {
-                return BadRequest();
+                //return BadRequest();
             }
 
             var user = await _authContext.Users.FirstOrDefaultAsync(x => x.email == userObj.email && x.password == userObj.password);
