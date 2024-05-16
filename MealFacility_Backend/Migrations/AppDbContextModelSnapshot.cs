@@ -37,11 +37,9 @@ namespace MealFacility_Backend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("firstName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("lastName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("password")

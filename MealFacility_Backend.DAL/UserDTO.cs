@@ -1,8 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace MealFacility_Backend.Models
+namespace MealFacility_Backend.DAL
 {
-    public class User
+    public class UserDTO
     {
         [Key]
         public int Id { get; set; }
