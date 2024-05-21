@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using MealFacility_Backend.Context;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using MealFacility_Backend.UtilityServices;
+using MealFacility_Backend.Context;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -23,7 +25,12 @@ builder.Services.AddCors(option =>
     });
 });
 
-builder.Services.AddDbContext<AppDbContext>(option => option.UseSqlServer(builder.Configuration.GetConnectionString("Meal_Facility")));
+builder.Services.AddDbContext<AppDbContext>(option =>
+{
+    option.UseSqlServer(builder.Configuration.GetConnectionString("Meal_Facility"));
+});
+
+builder.Services.AddScoped<IEmailServices, EmailServices>();
 
 builder.Services.AddAuthentication(x =>
 {

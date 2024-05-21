@@ -10,6 +10,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using MealFacility_Backend.UtilityServices;
+using Microsoft.Extensions.Configuration;
+using System.Security.Cryptography;
+using MealFacility_Backend.Models.DTO;
 
 namespace MealFacility_Backend.Controllers
 {
@@ -19,9 +23,15 @@ namespace MealFacility_Backend.Controllers
     {
         private readonly AppDbContext _authContext;
 
-        public UserController(AppDbContext appDbContext)
+        private readonly IConfiguration _configration;
+
+        private readonly IEmailServices _emailService;
+
+        public UserController(AppDbContext appDbContext, IConfiguration configuration, IEmailServices emailServices)
         {
             _authContext = appDbContext;
+            _configration = configuration;
+            _emailService = emailServices;
         }
 
         [HttpPost("authenticate")]
@@ -37,7 +47,7 @@ namespace MealFacility_Backend.Controllers
 
             if (!PasswordHasher.VerifyPassword(userObj.password, user.password))
             {
-                return BadRequest(new { Message = "Password is Incorrect" });
+                return BadRequest(new { message = "Password is Incorrect" });
             }
 
             user.Token = CreateJwt(user);
@@ -53,16 +63,20 @@ namespace MealFacility_Backend.Controllers
         public async Task<IActionResult> RegisterUser([FromBody] User userObj)
         {
             if (userObj == null)
-                return BadRequest();
+                return BadRequest(new { message = "Invalid request. User data is missing." });
 
             // Check email
             if (await CheckEmailExistAsync(userObj.email))
-                return BadRequest(new { Message = "Email Already Exist!" });
+                return BadRequest(new { message = "Email address is already in use." });
+
+            // Check userName
+            if (await CheckUserNameExistAsync(userObj.userName))
+                return BadRequest(new { message = "Username is already taken." });
 
             // Check password Strength
             var pass = CheckPasswordStrength(userObj.password);
             if (!string.IsNullOrEmpty(pass))
-                return BadRequest(new { Message = pass.ToString() });
+                return BadRequest(new { message = pass });
 
             userObj.password = PasswordHasher.HashPassword(userObj.password);
             userObj.Token = "";
@@ -72,12 +86,15 @@ namespace MealFacility_Backend.Controllers
 
             return Ok(new
             {
-                Message = "User Registered!"
+                message = "User registered successfully."
             });
         }
 
         private Task<bool> CheckEmailExistAsync(string email)
             => _authContext.Users.AnyAsync(x => x.email == email);
+
+        private Task<bool> CheckUserNameExistAsync(string userName)
+            => _authContext.Users.AnyAsync(x => x.userName == userName);
 
         private string CheckPasswordStrength(string password)
         {
@@ -115,11 +132,105 @@ namespace MealFacility_Backend.Controllers
             return jwtTokenHandler.WriteToken(token);
         }
 
-        [Authorize]
-        [HttpGet]
-        public async Task<ActionResult<User>> GetAllUser()
+       /* private string CreateRefreshToken()
         {
-            return Ok(await _authContext.Users.ToListAsync());
+            var tokenBytes = RandomNumberGenerator.GetBytes(64);
+            var refreshToken = Convert.ToBase64String(tokenBytes);
+
+            var tokenInUser = _authContext.Users
+                .Any(a => a.RefreshToken == refreshToken);
+
+            if (tokenInUser)
+            {
+                return CreateRefreshToken();
+            }
+
+            return refreshToken;
+        } */
+
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<User>> GetUserById(int id)
+        {
+            var user = await _authContext.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
+        }
+
+
+        [HttpPost("forgetpassword")]
+        public async Task<IActionResult> SendEmail([FromBody] User userObj)
+        {
+            var email = userObj.email;
+
+            var user = await _authContext.Users.FirstOrDefaultAsync(x => x.email == email);
+
+            if (user is null)
+            {
+                return NotFound(new
+                {
+                    StatusCode = 404,
+                    Message = "User doesn't exist"
+                });
+            }
+
+            // Generate a 6-digit OTP
+            string Otp = GenerateOTP();
+
+            string from = _configration["EmailSettings:From"];
+
+            var emailModel = new Email(email, "Reset Password!!", EmailBody.EmailStringBody(email, Otp));
+
+            _emailService.SendEmail(emailModel);
+
+          /*  _authContext.Entry(user).State = EntityState.Modified;
+
+            await _authContext.UpdateUserAsync(user); */
+
+            return Ok(new
+            {
+                StatusCode = 200,
+                Message = "Email sent!",
+                OTP = Otp
+            });
+        }
+
+        private string GenerateOTP()
+        {
+            Random rnd = new Random();
+            int otpNumber = rnd.Next(100000, 999999); // Generates a random number between 100000 and 999999
+            return otpNumber.ToString();
+        }
+
+        [HttpPost("newPassword")]
+        public async Task<IActionResult> ConfirmPassword([FromBody] NewPasswordDto newPasswordDto)
+        {
+            // Check if the provided email exists in the database
+            var user = await _authContext.Users.FirstOrDefaultAsync(x => x.email == newPasswordDto.Email);
+
+            if (user is null)
+            {
+                return NotFound(new
+                {
+                    StatusCode = 404,
+                    Message = "User doesn't exist"
+                });
+            }
+
+            // Update the user's password with the new password provided
+            user.password = PasswordHasher.HashPassword(newPasswordDto.Password);
+
+            // Save changes to the database
+            await _authContext.Users.AddAsync(user);
+
+            return Ok(new
+            {
+                StatusCode = 200,
+                Message = "Password reset successful"
+            });
         }
     }
 }
