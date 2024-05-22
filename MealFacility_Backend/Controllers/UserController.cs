@@ -11,8 +11,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MealFacility_Backend.UtilityServices;
-using Microsoft.Extensions.Configuration;
-using System.Security.Cryptography;
 using MealFacility_Backend.Models.DTO;
 
 namespace MealFacility_Backend.Controllers
@@ -55,6 +53,7 @@ namespace MealFacility_Backend.Controllers
             return Ok(new
             {
                 Token = user.Token,
+                UserId = user.Id,
                 Message = "Login Success!"
             });
         }
@@ -132,22 +131,6 @@ namespace MealFacility_Backend.Controllers
             return jwtTokenHandler.WriteToken(token);
         }
 
-       /* private string CreateRefreshToken()
-        {
-            var tokenBytes = RandomNumberGenerator.GetBytes(64);
-            var refreshToken = Convert.ToBase64String(tokenBytes);
-
-            var tokenInUser = _authContext.Users
-                .Any(a => a.RefreshToken == refreshToken);
-
-            if (tokenInUser)
-            {
-                return CreateRefreshToken();
-            }
-
-            return refreshToken;
-        } */
-
         [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUserById(int id)
@@ -161,7 +144,7 @@ namespace MealFacility_Backend.Controllers
         }
 
 
-        [HttpPost("forgetpassword")]
+        [HttpPost("forgotpassword")]
         public async Task<IActionResult> SendEmail([FromBody] User userObj)
         {
             var email = userObj.email;
@@ -182,18 +165,14 @@ namespace MealFacility_Backend.Controllers
 
             string from = _configration["EmailSettings:From"];
 
-            var emailModel = new Email(email, "Reset Password!!", EmailBody.EmailStringBody(email, Otp));
+            var emailModel = new Email(email, "OTP for Reset Password!!", EmailBody.EmailStringBody(email, Otp));
 
             _emailService.SendEmail(emailModel);
-
-          /*  _authContext.Entry(user).State = EntityState.Modified;
-
-            await _authContext.UpdateUserAsync(user); */
 
             return Ok(new
             {
                 StatusCode = 200,
-                Message = "Email sent!",
+                Message = "Otp sent successfully on given email",
                 OTP = Otp
             });
         }
@@ -220,16 +199,14 @@ namespace MealFacility_Backend.Controllers
                 });
             }
 
-            // Update the user's password with the new password provided
             user.password = PasswordHasher.HashPassword(newPasswordDto.Password);
 
-            // Save changes to the database
             await _authContext.Users.AddAsync(user);
 
             return Ok(new
             {
                 StatusCode = 200,
-                Message = "Password reset successful"
+                Message = "Password reset successfully"
             });
         }
     }
