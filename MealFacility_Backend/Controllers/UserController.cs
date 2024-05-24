@@ -52,8 +52,7 @@ namespace MealFacility_Backend.Controllers
 
             return Ok(new
             {
-                Token = user.Token,
-                UserId = user.Id,
+                user = user,
                 Message = "Login Success!"
             });
         }
@@ -124,12 +123,13 @@ namespace MealFacility_Backend.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = identity,
-                Expires = DateTime.Now.AddHours(2),
+                Expires = DateTime.Now.AddDays(1),
                 SigningCredentials = credentials,
             };
             var token = jwtTokenHandler.CreateToken(tokenDescriptor);
             return jwtTokenHandler.WriteToken(token);
         }
+
 
         [Authorize]
         [HttpGet("{id}")]
@@ -141,6 +141,14 @@ namespace MealFacility_Backend.Controllers
                 return NotFound();
             }
             return Ok(user);
+        }
+
+
+        [Authorize]
+        [HttpGet]
+        public async Task<ActionResult<User>> GetAllUser()
+        {
+            return Ok(await _authContext.Users.ToListAsync());
         }
 
 
