@@ -12,5 +12,7 @@ namespace MealFacility_Backend.Models
         public string email { get; set; }
         public string? password { get; set; }
         public string? Token { get; set; }
+
+        public DateTime TimeStamp { get; set; }
     }
 }

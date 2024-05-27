@@ -10,5 +10,7 @@ namespace MealFacility_Backend.Models
         public string CouponCode { get; set; }
 
         public DateTime GetDate { get; set; }
+
+        public DateTime TimeStamp { get; set; }
     }
 }

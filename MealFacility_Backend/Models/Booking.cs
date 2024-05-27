@@ -30,5 +30,7 @@ namespace MealFacility_Backend.Models
 
         [ForeignKey("Id")]
         public User User { get; set; }
+
+        public DateTime TimeStamp { get; set; }
     }
 }

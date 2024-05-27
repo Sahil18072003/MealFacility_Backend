@@ -131,8 +131,8 @@ namespace MealFacility_Backend.Controllers
         }
 
 
-        [Authorize]
-        [HttpGet("{id}")]
+        //[Authorize]
+        [HttpGet("getUser/{id}")]
         public async Task<ActionResult<User>> GetUserById(int id)
         {
             var user = await _authContext.Users.FindAsync(id);
@@ -141,18 +141,18 @@ namespace MealFacility_Backend.Controllers
                 return NotFound();
             }
             return Ok(user);
-        }
+        } 
 
 
-        [Authorize]
-        [HttpGet]
+        //[Authorize]
+        [HttpGet("getAllUsers")]
         public async Task<ActionResult<User>> GetAllUser()
         {
             return Ok(await _authContext.Users.ToListAsync());
         }
 
 
-        [HttpPost("forgotpassword")]
+        [HttpPost("forgotPassword")]
         public async Task<IActionResult> SendEmail([FromBody] User userObj)
         {
             var email = userObj.email;
