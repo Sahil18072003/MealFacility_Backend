@@ -12,6 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MealFacility_Backend.UtilityServices;
 using MealFacility_Backend.Models.DTO;
+using static System.Net.WebRequestMethods;
 
 namespace MealFacility_Backend.Controllers
 {
@@ -112,7 +113,9 @@ namespace MealFacility_Backend.Controllers
         private string CreateJwt(User user)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
+
             var key = Encoding.ASCII.GetBytes("veryveryveryveryveryveryverysceret....");
+
             var identity = new ClaimsIdentity(new Claim[]
             {
                 new Claim(ClaimTypes.Email, user.email),
@@ -120,19 +123,21 @@ namespace MealFacility_Backend.Controllers
             });
 
             var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = identity,
                 Expires = DateTime.Now.AddDays(1),
                 SigningCredentials = credentials,
             };
+
             var token = jwtTokenHandler.CreateToken(tokenDescriptor);
             return jwtTokenHandler.WriteToken(token);
         }
 
 
         //[Authorize]
-        [HttpGet("getUser/{id}")]
+       /* [HttpGet("getUser/{id}")]
         public async Task<ActionResult<User>> GetUserById(int id)
         {
             var user = await _authContext.Users.FindAsync(id);
@@ -150,7 +155,7 @@ namespace MealFacility_Backend.Controllers
         {
             return Ok(await _authContext.Users.ToListAsync());
         }
-
+        */
 
         [HttpPost("forgotPassword")]
         public async Task<IActionResult> SendEmail([FromBody] User userObj)
@@ -170,6 +175,12 @@ namespace MealFacility_Backend.Controllers
 
             // Generate a 6-digit OTP
             string Otp = GenerateOTP();
+
+            user.GeneratedOTP = Otp;
+            user.TimeStamp = DateTime.UtcNow;
+
+            await _authContext.Users.AddAsync(userObj);
+            await _authContext.SaveChangesAsync();
 
             string from = _configration["EmailSettings:From"];
 
@@ -191,6 +202,41 @@ namespace MealFacility_Backend.Controllers
             int otpNumber = rnd.Next(100000, 999999); // Generates a random number between 100000 and 999999
             return otpNumber.ToString();
         }
+
+        [HttpPost("verifyOTP")]
+        public IActionResult VerifyOTP([FromBody] OTPVerificationDto otpVerificationDto)
+        {
+            // Retrieve user by email
+            var user = _authContext.Users.FirstOrDefault(x => x.email == otpVerificationDto.email);
+
+            if (user == null)
+            {
+                return NotFound(new
+                {
+                    StatusCode = 404,
+                    Message = "User not found"
+                });
+            }
+
+            // Check if OTP matches
+            if (otpVerificationDto.EnteredOTP != user.GeneratedOTP)
+            {
+                return BadRequest(new
+                {
+                    StatusCode = 400,
+                    Message = "Entered OTP is incorrect"
+                });
+            }
+
+            // OTP is correct, perform further actions if needed
+
+            return Ok(new
+            {
+                StatusCode = 200,
+                Message = "OTP verification successful"
+            });
+        }
+
 
         [HttpPost("newPassword")]
         public async Task<IActionResult> ConfirmPassword([FromBody] NewPasswordDto newPasswordDto)
