@@ -14,7 +14,7 @@ namespace MealFacility_Backend.Context
 
         public DbSet<Booking> Bookings { get; set; }
 
-      //  public DbSet<Coupon> Coupons { get; set; }
+        public DbSet<Coupon> Coupons { get; set; }
 
         public DbSet<Notification> Notifications { get; set; }
 
@@ -24,7 +24,7 @@ namespace MealFacility_Backend.Context
 
             modelBuilder.Entity<Booking>().ToTable("bookings");
 
-       //     modelBuilder.Entity<Coupon>().ToTable("coupon");
+            modelBuilder.Entity<Coupon>().ToTable("coupon");
 
             modelBuilder.Entity<Notification>().ToTable("notification");
         }

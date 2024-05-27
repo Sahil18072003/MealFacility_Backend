@@ -12,7 +12,8 @@ namespace MealFacility_Backend.Models
 
         public int UserId { get; set; }
 
-      //  public User User { get; set; }
+        [ForeignKey("Id")]
+        public User User { get; set; }
 
         public int BookingId { get; set; }
 

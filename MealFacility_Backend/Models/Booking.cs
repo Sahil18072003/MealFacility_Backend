@@ -22,10 +22,6 @@ namespace MealFacility_Backend.Models
 
         public string? Status { get; set; }
 
-        //public string? CupponId { get; set; }
-        //[ForeignKey("CouponId")]
-        //public Coupon Coupon { get; set; }
-
         public int UserId { get; set; }
 
         [ForeignKey("Id")]

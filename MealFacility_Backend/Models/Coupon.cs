@@ -5,12 +5,12 @@ namespace MealFacility_Backend.Models
     public class Coupon
     {
         [Key]
-        public int CouponId { get; set; }
+        public int Id { get; set; }
 
-        public string CouponCode { get; set; }
+        public string? CouponCode { get; set; }
 
-        public DateTime GetDate { get; set; }
+        public DateTime? CreatedTime { get; set; }
 
-        public DateTime TimeStamp { get; set; }
+        public DateTime? ExpirationTime { get; set; }
     }
 }

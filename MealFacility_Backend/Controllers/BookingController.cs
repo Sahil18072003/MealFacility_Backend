@@ -20,7 +20,7 @@ namespace MealFacility_Backend.Controllers
         }
 
         //[Authorize]
-        [HttpPost("book")]
+        [HttpPost("booking")]
         public async Task<IActionResult> AddBooking([FromBody] BookingDTO bookingObj)
         {
             if (!ModelState.IsValid)
@@ -78,7 +78,7 @@ namespace MealFacility_Backend.Controllers
         }
 
         [Authorize]
-        [HttpGet("{id}")]
+        [HttpGet("getBooking/{id}")]
         public async Task<ActionResult<Booking>> GetUserById(int id)
         {
             var booking = await _authContext.Bookings.FindAsync(id);
@@ -91,7 +91,7 @@ namespace MealFacility_Backend.Controllers
 
 
         [Authorize]
-        [HttpDelete("{date}")]
+        [HttpDelete("cancelBooking/{date}")]
         public async Task<IActionResult> CancelBooking(DateTime date)
         {
             var username = User.Identity.Name;

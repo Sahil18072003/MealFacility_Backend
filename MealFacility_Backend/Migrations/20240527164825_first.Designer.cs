@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MealFacility_Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240527074328_first")]
+    [Migration("20240527164825_first")]
     partial class first
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -67,10 +67,7 @@ namespace MealFacility_Backend.Migrations
             modelBuilder.Entity("MealFacility_Backend.Models.Notification", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<int>("BookingId")
                         .HasColumnType("int");
@@ -126,6 +123,17 @@ namespace MealFacility_Backend.Migrations
                 });
 
             modelBuilder.Entity("MealFacility_Backend.Models.Booking", b =>
+                {
+                    b.HasOne("MealFacility_Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MealFacility_Backend.Models.Notification", b =>
                 {
                     b.HasOne("MealFacility_Backend.Models.User", "User")
                         .WithMany()
