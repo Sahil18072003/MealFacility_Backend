@@ -238,10 +238,9 @@ namespace MealFacility_Backend.Controllers
         }
 
 
-        [HttpPost("newPassword")]
+        [HttpPost("resetPassword")]
         public async Task<IActionResult> ConfirmPassword([FromBody] NewPasswordDto newPasswordDto)
         {
-            // Check if the provided email exists in the database
             var user = await _authContext.Users.FirstOrDefaultAsync(x => x.email == newPasswordDto.Email);
 
             if (user is null)
@@ -255,12 +254,41 @@ namespace MealFacility_Backend.Controllers
 
             user.password = PasswordHasher.HashPassword(newPasswordDto.Password);
 
-            await _authContext.Users.AddAsync(user);
+            _authContext.Update(user); // Update the existing user
+
+            await _authContext.SaveChangesAsync();
 
             return Ok(new
             {
                 StatusCode = 200,
-                Message = "Password reset successfully"
+                Message = "Password reset successfully",
+            });
+        }
+
+        [HttpPost("changePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] NewPasswordDto newPasswordDto)
+        {
+            var user = await _authContext.Users.FirstOrDefaultAsync(x => x.email == newPasswordDto.Email);
+
+            if (user is null)
+            {
+                return NotFound(new
+                {
+                    StatusCode = 404,
+                    Message = "User doesn't exist"
+                });
+            }
+
+            user.password = PasswordHasher.HashPassword(newPasswordDto.Password);
+
+            _authContext.Update(user); // Update the existing user
+
+            await _authContext.SaveChangesAsync();
+
+            return Ok(new
+            {
+                StatusCode = 200,
+                Message = "Password changed successfully",
             });
         }
     }

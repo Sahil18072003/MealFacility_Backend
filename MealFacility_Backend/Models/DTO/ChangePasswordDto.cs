@@ -1,6 +1,6 @@
 ﻿namespace MealFacility_Backend.Models.DTO
 {
-    public class NewPasswordDto
+    public class ChangePasswordDto
     {
         public string Email { get; set; }
 
