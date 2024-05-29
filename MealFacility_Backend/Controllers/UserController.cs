@@ -266,9 +266,9 @@ namespace MealFacility_Backend.Controllers
         }
 
         [HttpPost("changePassword")]
-        public async Task<IActionResult> ChangePassword([FromBody] NewPasswordDto newPasswordDto)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
         {
-            var user = await _authContext.Users.FirstOrDefaultAsync(x => x.email == newPasswordDto.Email);
+            var user = await _authContext.Users.FirstOrDefaultAsync(x => x.email == changePasswordDto.Email);
 
             if (user is null)
             {
@@ -279,7 +279,28 @@ namespace MealFacility_Backend.Controllers
                 });
             }
 
-            user.password = PasswordHasher.HashPassword(newPasswordDto.Password);
+            // Check if entered old password matches the current password
+            if (!PasswordHasher.VerifyPassword(changePasswordDto.Password, user.password))
+            {
+                return BadRequest(new
+                {
+                    StatusCode = 400,
+                    Message = "Old password is incorrect."
+                });
+            }
+
+            // Check if Password and NewPassword are the same
+            if (changePasswordDto.Password == changePasswordDto.NewPassword)
+            {
+                return BadRequest(new
+                {
+                    StatusCode = 400,
+                    Message = "New password must be different from the current password"
+                });
+            }
+
+            // Hash the new password
+            user.password = PasswordHasher.HashPassword(changePasswordDto.NewPassword);
 
             _authContext.Update(user); // Update the existing user
 

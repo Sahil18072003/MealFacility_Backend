@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MealFacility_Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240529030603_first")]
-    partial class first
+    [Migration("20240529045830_firstdsf")]
+    partial class firstdsf
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

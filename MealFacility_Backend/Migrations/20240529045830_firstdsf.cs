@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MealFacility_Backend.Migrations
 {
-    public partial class first : Migration
+    public partial class firstdsf : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
