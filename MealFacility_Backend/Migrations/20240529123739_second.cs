@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MealFacility_Backend.Migrations
 {
-    public partial class firstdsf : Migration
+    public partial class second : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -48,23 +48,20 @@ namespace MealFacility_Backend.Migrations
                 name: "bookings",
                 columns: table => new
                 {
-                    BookingId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    BookingType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BookingType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     BookingDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    BookingStartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    BookingEndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    Id = table.Column<int>(type: "int", nullable: false),
                     TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_bookings", x => x.BookingId);
+                    table.PrimaryKey("PK_bookings", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_bookings_users_Id",
-                        column: x => x.Id,
+                        name: "FK_bookings_users_UserId",
+                        column: x => x.UserId,
                         principalTable: "users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -92,9 +89,9 @@ namespace MealFacility_Backend.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_bookings_Id",
+                name: "IX_bookings_UserId",
                 table: "bookings",
-                column: "Id");
+                column: "UserId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

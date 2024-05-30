@@ -42,11 +42,11 @@ namespace MealFacility_Backend.Controllers
             var user = await _authContext.Users.FirstOrDefaultAsync(x => x.email == userObj.email);
 
             if (user == null)
-                return NotFound(new { message = "User Not Found!" });
+                return NotFound("User Not Found!");
 
             if (!PasswordHasher.VerifyPassword(userObj.password, user.password))
             {
-                return BadRequest(new { message = "Password is Incorrect" });
+                return BadRequest("Password is Incorrect");
             }
 
             user.Token = CreateJwt(user);
@@ -62,20 +62,20 @@ namespace MealFacility_Backend.Controllers
         public async Task<IActionResult> RegisterUser([FromBody] User userObj)
         {
             if (userObj == null)
-                return BadRequest(new { message = "Invalid request. User data is missing." });
+                return BadRequest("Invalid request. User data is missing.");
 
             // Check email
             if (await CheckEmailExistAsync(userObj.email))
-                return BadRequest(new { message = "Email address is already in use." });
+                return BadRequest("Email address is already in use.");
 
             // Check userName
             if (await CheckUserNameExistAsync(userObj.userName))
-                return BadRequest(new { message = "Username is already taken." });
+                return BadRequest("Username is already taken.");
 
             // Check password Strength
             var pass = CheckPasswordStrength(userObj.password);
             if (!string.IsNullOrEmpty(pass))
-                return BadRequest(new { message = pass });
+                return BadRequest(pass);
 
             userObj.password = PasswordHasher.HashPassword(userObj.password);
             userObj.Token = "";
@@ -166,11 +166,7 @@ namespace MealFacility_Backend.Controllers
 
             if (user is null)
             {
-                return NotFound(new
-                {
-                    StatusCode = 404,
-                    Message = "User doesn't exist"
-                });
+                return NotFound("User doesn't exist");
             }
 
             // Generate a 6-digit OTP
@@ -211,21 +207,13 @@ namespace MealFacility_Backend.Controllers
 
             if (user == null)
             {
-                return NotFound(new
-                {
-                    StatusCode = 404,
-                    Message = "User not found"
-                });
+                return NotFound("User not found");
             }
 
             // Check if OTP matches
             if (otpVerificationDto.EnteredOTP != user.GeneratedOTP)
             {
-                return BadRequest(new
-                {
-                    StatusCode = 400,
-                    Message = "Entered OTP is incorrect"
-                });
+                return BadRequest("Entered OTP is incorrect");
             }
 
             // OTP is correct, perform further actions if needed
@@ -245,11 +233,7 @@ namespace MealFacility_Backend.Controllers
 
             if (user is null)
             {
-                return NotFound(new
-                {
-                    StatusCode = 404,
-                    Message = "User doesn't exist"
-                });
+                return NotFound("User doesn't exist");
             }
 
             user.password = PasswordHasher.HashPassword(newPasswordDto.Password);
@@ -272,31 +256,19 @@ namespace MealFacility_Backend.Controllers
 
             if (user is null)
             {
-                return NotFound(new
-                {
-                    StatusCode = 404,
-                    Message = "User doesn't exist"
-                });
+                return NotFound("User doesn't exist");
             }
 
             // Check if entered old password matches the current password
             if (!PasswordHasher.VerifyPassword(changePasswordDto.Password, user.password))
             {
-                return BadRequest(new
-                {
-                    StatusCode = 400,
-                    Message = "Old password is incorrect."
-                });
+                return BadRequest("Old password is incorrect.");
             }
 
             // Check if Password and NewPassword are the same
             if (changePasswordDto.Password == changePasswordDto.NewPassword)
             {
-                return BadRequest(new
-                {
-                    StatusCode = 400,
-                    Message = "New password must be different from the current password"
-                });
+                return BadRequest("New password must be different from the current password");
             }
 
             // Hash the new password
