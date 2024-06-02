@@ -7,6 +7,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Globalization;
+using MealFacility_Backend.Models.DTO;
 
 namespace MealFacility_Backend.Controllers
 {
@@ -47,19 +49,17 @@ namespace MealFacility_Backend.Controllers
                 return BadRequest("Booking cannot be made more than 3 months in advance.");
             }
 
-            var holidays = GetHolidays(); // Assume this method returns a list of holiday dates
+            var holidays = GetHolidays();
             var currentDate = bookingObj.BookingStartDate;
 
             while (currentDate <= bookingObj.BookingEndDate)
             {
-                // Skip weekends and holidays
                 if (currentDate.DayOfWeek == DayOfWeek.Saturday || currentDate.DayOfWeek == DayOfWeek.Sunday || holidays.Contains(currentDate))
                 {
                     currentDate = currentDate.AddDays(1);
                     continue;
                 }
 
-                // Check for overlapping bookings
                 var existingBooking = await _authContext.Bookings
                     .Where(b => b.UserId == user.Id && b.BookingDate == currentDate)
                     .FirstOrDefaultAsync();
@@ -80,7 +80,6 @@ namespace MealFacility_Backend.Controllers
 
                 await _authContext.Bookings.AddAsync(booking);
 
-                // Move to the next day
                 currentDate = currentDate.AddDays(1);
             }
 
@@ -94,10 +93,9 @@ namespace MealFacility_Backend.Controllers
 
         private List<DateTime> GetHolidays()
         {
-            // Return a list of holidays
             return new List<DateTime>
             {
-                new DateTime(DateTime.Today.Year, 12, 25), // Example: Christmas
+                new DateTime(DateTime.Today.Year, 12, 25),
                 // Add more holidays as needed
             };
         }
@@ -123,13 +121,11 @@ namespace MealFacility_Backend.Controllers
                 return BadRequest("Booking for today or any past date is not allowed.");
             }
 
-            // Ensure the booking button is visible until 8 PM the previous day
             if (bookingObj.BookingDate.Date == DateTime.Today.AddDays(1) && DateTime.Now.Hour >= 20)
             {
                 return BadRequest("Booking for tomorrow is not allowed after 8 PM today.");
             }
 
-            // Check for overlapping bookings
             var existingBooking = await _authContext.Bookings
                 .Where(b => b.UserId == user.Id && b.BookingDate == bookingObj.BookingDate)
                 .FirstOrDefaultAsync();
@@ -158,8 +154,8 @@ namespace MealFacility_Backend.Controllers
         }
 
         [Authorize]
-        [HttpGet("getUserBookings/{userId}")]
-        public async Task<ActionResult<IEnumerable<Booking>>> GetBookingsByUserId(int userId)
+        [HttpGet("viewUserBookings/{userId}")]
+        public async Task<ActionResult<IEnumerable<DateTime>>> GetBookingsByUserId(int userId)
         {
             var user = await _authContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
 
@@ -181,17 +177,10 @@ namespace MealFacility_Backend.Controllers
         }
 
         [Authorize]
-        [HttpDelete("cancelBooking/{date}")]
-        public async Task<IActionResult> CancelBooking(DateTime date)
+        [HttpPut("cancelBooking")]
+        public async Task<IActionResult> CancelBooking([FromBody] CancelBookingDto cancelBookingDto)
         {
-            var username = User?.Identity?.Name;
-
-            if (string.IsNullOrEmpty(username))
-            {
-                return Unauthorized("User ID not found in token.");
-            }
-
-            var user = await _authContext.Users.FirstOrDefaultAsync(x => x.userName == username);
+            var user = await _authContext.Users.FirstOrDefaultAsync(x => x.Id == cancelBookingDto.UserId);
 
             if (user == null)
             {
@@ -199,7 +188,7 @@ namespace MealFacility_Backend.Controllers
             }
 
             var booking = await _authContext.Bookings
-                .Where(b => b.User.userName == username && b.BookingDate.Date == date.Date)
+                .Where(b => b.UserId == user.Id && b.BookingDate.Date == cancelBookingDto.Date)
                 .FirstOrDefaultAsync();
 
             if (booking == null)
@@ -207,21 +196,16 @@ namespace MealFacility_Backend.Controllers
                 return NotFound("Booking not found for the selected date.");
             }
 
-            if (DateTime.Now.Date == date.Date && DateTime.Now.Hour >= 20)
-            {
-                return BadRequest("Cannot cancel booking on the same day after 8 PM.");
-            }
-
-            if (DateTime.Now.Date > date.Date)
+            if (DateTime.Now.Date > cancelBookingDto.Date)
             {
                 return BadRequest("Cannot cancel past bookings.");
             }
 
-            // Remove the booking
-            _authContext.Bookings.Remove(booking);
+            booking.Status = "Cancelled";
+            _authContext.Entry(booking).State = EntityState.Modified;
+
             await _authContext.SaveChangesAsync();
 
-            // Automatically add a booking for the next valid day
             var lastBookingDate = await _authContext.Bookings
                 .Where(b => b.UserId == user.Id)
                 .OrderByDescending(b => b.BookingDate)
@@ -229,6 +213,7 @@ namespace MealFacility_Backend.Controllers
                 .FirstOrDefaultAsync();
 
             var newBookingDate = GetNextValidDate(lastBookingDate.AddDays(1));
+
             var newBooking = new Booking
             {
                 BookingDate = newBookingDate,
@@ -241,7 +226,10 @@ namespace MealFacility_Backend.Controllers
 
             await _authContext.SaveChangesAsync();
 
-            return Ok("Booking cancelled successfully.");
+            return Ok(new
+            {
+                Message = "Booking cancelled successfully."
+            });
         }
 
         private DateTime GetNextValidDate(DateTime startDate)

@@ -17,7 +17,7 @@
     <div style=""background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"">
         <h2 style=""color: #333;"">Your OTP for Password Reset</h2>
         <p style=""color: #666;"">Your OTP for resetting the password is:</p>
-        <div style=""font-size: 24px; font-weight: bold; color: #007bff; margin-bottom: 20px;"">{otp}</div>
+        <div style=""font-size: 24px; font-weight: bold; color: #093cb3; margin-bottom: 20px;"">{otp}</div>
         <p style=""color: #666;"">Please use this OTP to reset your password. This OTP is valid for 5 minutes.</p>
         <p style=""color: #666;"">If you didn't request a password reset, please ignore this email.</p>
     </div>
