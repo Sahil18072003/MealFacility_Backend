@@ -39,20 +39,21 @@ namespace MealFacility_Backend.Controllers
                 return NotFound("User not found.");
             }
 
-            if (bookingObj.BookingStartDate.Date <= DateTime.Today)
+            if (bookingObj.BookingStartDate.Date.AddDays(1) <= DateTime.Today)
             {
                 return BadRequest("Booking for today or any past date is not allowed.");
             }
 
-            if (bookingObj.BookingStartDate.Date > DateTime.Today.AddMonths(3))
+            if (bookingObj.BookingStartDate.Date.AddDays(1) > DateTime.Today.AddMonths(3))
             {
                 return BadRequest("Booking cannot be made more than 3 months in advance.");
             }
 
             var holidays = GetHolidays();
-            var currentDate = bookingObj.BookingStartDate;
+            var currentDate = bookingObj.BookingStartDate.Date.AddDays(1);
+            var endDate = bookingObj.BookingEndDate.Date.AddDays(1);
 
-            while (currentDate <= bookingObj.BookingEndDate)
+            while (currentDate <= endDate)
             {
                 if (currentDate.DayOfWeek == DayOfWeek.Saturday || currentDate.DayOfWeek == DayOfWeek.Sunday || holidays.Contains(currentDate))
                 {
@@ -116,18 +117,20 @@ namespace MealFacility_Backend.Controllers
                 return NotFound("User not found.");
             }
 
-            if (bookingObj.BookingDate.Date <= DateTime.Today)
+            var bookingDate = bookingObj.BookingDate.Date.AddDays(1);
+
+            if (bookingDate <= DateTime.Today)
             {
                 return BadRequest("Booking for today or any past date is not allowed.");
             }
 
-            if (bookingObj.BookingDate.Date == DateTime.Today.AddDays(1) && DateTime.Now.Hour >= 20)
+            if (bookingDate == DateTime.Today.AddDays(1) && DateTime.Now.Hour >= 20)
             {
                 return BadRequest("Booking for tomorrow is not allowed after 8 PM today.");
             }
 
             var existingBooking = await _authContext.Bookings
-                .Where(b => b.UserId == user.Id && b.BookingDate == bookingObj.BookingDate)
+                .Where(b => b.UserId == user.Id && b.BookingDate == bookingDate)
                 .FirstOrDefaultAsync();
 
             if (existingBooking != null)
@@ -137,7 +140,7 @@ namespace MealFacility_Backend.Controllers
 
             var booking = new Booking
             {
-                BookingDate = bookingObj.BookingDate,
+                BookingDate = bookingDate,
                 BookingType = bookingObj.BookingType,
                 UserId = user.Id,
                 Status = "Active",
@@ -187,8 +190,10 @@ namespace MealFacility_Backend.Controllers
                 return NotFound("User not found.");
             }
 
+            var cancelDate = cancelBookingDto.Date.Date.AddDays(1);
+
             var booking = await _authContext.Bookings
-                .Where(b => b.UserId == user.Id && b.BookingDate.Date == cancelBookingDto.Date)
+                .Where(b => b.UserId == user.Id && b.BookingDate.Date == cancelDate)
                 .FirstOrDefaultAsync();
 
             if (booking == null)
@@ -196,7 +201,7 @@ namespace MealFacility_Backend.Controllers
                 return NotFound("Booking not found for the selected date.");
             }
 
-            if (DateTime.Now.Date > cancelBookingDto.Date)
+            if (DateTime.Now.Date > cancelDate)
             {
                 return BadRequest("Cannot cancel past bookings.");
             }
