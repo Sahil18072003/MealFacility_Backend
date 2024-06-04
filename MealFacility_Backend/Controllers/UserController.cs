@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using MealFacility_Backend.UtilityServices;
 using MealFacility_Backend.Models.DTO;
 using static System.Net.WebRequestMethods;
+using MealFacility_Backend.Services.IServices;
 
 namespace MealFacility_Backend.Controllers
 {
@@ -68,6 +68,11 @@ namespace MealFacility_Backend.Controllers
             if (await CheckEmailExistAsync(userObj.email))
                 return BadRequest("Email address is already in use.");
 
+            // Check email Strength
+            var ema = CheckEmailStrength(userObj.email);
+            if (!string.IsNullOrEmpty(ema))
+                return BadRequest(ema);
+
             // Check userName
             if (await CheckUserNameExistAsync(userObj.userName))
                 return BadRequest("Username is already taken.");
@@ -94,6 +99,16 @@ namespace MealFacility_Backend.Controllers
 
         private Task<bool> CheckUserNameExistAsync(string userName)
             => _authContext.Users.AnyAsync(x => x.userName == userName);
+
+        private string CheckEmailStrength(string email)
+        {
+            StringBuilder sb = new StringBuilder();
+            // Email validation pattern
+            string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!Regex.IsMatch(email, emailPattern))
+                sb.Append("Invalid email format" + Environment.NewLine);
+            return sb.ToString();
+        }
 
         private string CheckPasswordStrength(string password)
         {

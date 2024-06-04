@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MealFacility_Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240529123739_second")]
-    partial class second
+    [Migration("20240604051815_first")]
+    partial class first
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -57,10 +57,7 @@ namespace MealFacility_Backend.Migrations
             modelBuilder.Entity("MealFacility_Backend.Models.Coupon", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("CouponCode")
                         .HasColumnType("nvarchar(max)");
@@ -70,6 +67,9 @@ namespace MealFacility_Backend.Migrations
 
                     b.Property<DateTime?>("ExpirationTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -142,6 +142,17 @@ namespace MealFacility_Backend.Migrations
                     b.HasOne("MealFacility_Backend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MealFacility_Backend.Models.Coupon", b =>
+                {
+                    b.HasOne("MealFacility_Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

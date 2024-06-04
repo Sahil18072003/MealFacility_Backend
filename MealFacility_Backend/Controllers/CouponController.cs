@@ -1,8 +1,11 @@
 ﻿using MealFacility_Backend.Context;
 using MealFacility_Backend.Models;
-using Microsoft.AspNetCore.Http;
+using MealFacility_Backend.Models.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MealFacility_Backend.Controllers
 {
@@ -17,23 +20,42 @@ namespace MealFacility_Backend.Controllers
             _authContext = appDbContext;
         }
 
-        [HttpPost("coupon")]
-        public async Task<IActionResult> GetCoupon([FromBody] Coupon coupon)
+        [Authorize]
+        [HttpPost("createCoupon")]
+        public async Task<IActionResult> CreateCoupon([FromBody] CoupenRequestDto requestDto)
         {
+            if (requestDto == null || requestDto.UserId == 0)
+            {
+                return BadRequest("Invalid request data");
+            }
+
+            var user = await _authContext.Users.FirstOrDefaultAsync(x => x.Id == requestDto.UserId);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
             var createdTime = DateTime.Now;
 
-            var newcoupon = new Coupon
+            var newCoupon = new Coupon
             {
                 CouponCode = GenerateRandomAlphanumericCode(10),
                 CreatedTime = createdTime,
                 ExpirationTime = createdTime.AddMinutes(1),
+                UserId = user.Id,
+                User = user
             };
 
-
-            _authContext.Coupons.Add(newcoupon);
+            _authContext.Coupons.Add(newCoupon);
             await _authContext.SaveChangesAsync();
 
-            return Ok(newcoupon);
+            return Ok(new
+            {
+                StatusCode = 200,
+                Message = "Coupon created successfully",
+                Coupon = newCoupon
+            });
         }
 
         private static string GenerateRandomAlphanumericCode(int length)
@@ -44,7 +66,6 @@ namespace MealFacility_Backend.Controllers
 
             for (int i = 0; i < length; i++)
             {
-
                 result.Append(chars[random.Next(chars.Length)]);
             }
             return result.ToString();

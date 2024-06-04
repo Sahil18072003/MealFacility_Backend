@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using MealFacility_Backend.UtilityServices;
 using MealFacility_Backend.Context;
 using System.Text;
+using MealFacility_Backend.Helpers;
+using MealFacility_Backend.Services.Services;
+using MealFacility_Backend.Services.IServices;
+using Backend.Backend.Service.IUtilityService;
+using Backend.Backend.Service.UtilityServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +36,8 @@ builder.Services.AddDbContext<AppDbContext>(option =>
 
 builder.Services.AddScoped<IEmailServices, EmailServices>();
 
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -50,6 +56,8 @@ builder.Services.AddAuthentication(x =>
 
     };
 });
+
+builder.Services.AddHostedService<ExpireCoupon>();
 
 var app = builder.Build();
 

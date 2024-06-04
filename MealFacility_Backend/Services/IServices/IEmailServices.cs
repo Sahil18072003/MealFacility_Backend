@@ -1,6 +1,6 @@
 ﻿using MealFacility_Backend.Models;
 
-namespace MealFacility_Backend.UtilityServices
+namespace MealFacility_Backend.Services.IServices
 {
     public interface IEmailServices
     {

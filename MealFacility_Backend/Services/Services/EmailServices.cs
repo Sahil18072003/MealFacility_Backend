@@ -2,8 +2,9 @@
 using MimeKit;
 using System.Net.Mail;
 using MailKit.Net.Smtp;
+using MealFacility_Backend.Services.IServices;
 
-namespace MealFacility_Backend.UtilityServices
+namespace MealFacility_Backend.Services.Services
 {
     public class EmailServices : IEmailServices
     {
