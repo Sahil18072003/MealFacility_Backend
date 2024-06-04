@@ -50,7 +50,9 @@ namespace MealFacility_Backend.Controllers
             }
 
             var holidays = GetHolidays();
+
             var currentDate = bookingObj.BookingStartDate.Date.AddDays(1);
+
             var endDate = bookingObj.BookingEndDate.Date.AddDays(1);
 
             while (currentDate <= endDate)
@@ -148,6 +150,7 @@ namespace MealFacility_Backend.Controllers
             };
 
             await _authContext.Bookings.AddAsync(booking);
+
             await _authContext.SaveChangesAsync();
 
             return Ok(new
@@ -207,6 +210,7 @@ namespace MealFacility_Backend.Controllers
             }
 
             booking.Status = "Cancelled";
+
             _authContext.Entry(booking).State = EntityState.Modified;
 
             await _authContext.SaveChangesAsync();
@@ -227,6 +231,7 @@ namespace MealFacility_Backend.Controllers
                 Status = "Active",
                 TimeStamp = DateTime.Now
             };
+
             await _authContext.Bookings.AddAsync(newBooking);
 
             await _authContext.SaveChangesAsync();
@@ -240,6 +245,7 @@ namespace MealFacility_Backend.Controllers
         private DateTime GetNextValidDate(DateTime startDate)
         {
             var newDate = startDate;
+
             while (newDate.DayOfWeek == DayOfWeek.Saturday || newDate.DayOfWeek == DayOfWeek.Sunday)
             {
                 newDate = newDate.AddDays(1);

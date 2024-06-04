@@ -15,7 +15,7 @@ namespace MealFacility_Backend.Models
         public int UserId { get; set; }
 
         [ForeignKey("Id")]
-        public User User { get; set; }
+        public User? User { get; set; }
 
         public DateTime? ExpirationTime { get; set; }
     }

@@ -253,7 +253,17 @@ namespace MealFacility_Backend.Controllers
 
             user.password = PasswordHasher.HashPassword(newPasswordDto.Password);
 
-            _authContext.Update(user); // Update the existing user
+            _authContext.Update(user); 
+
+            // Create and save the notification
+            var notification = new Notification
+            {
+                UserId = user.Id,
+                Message = "Password reset successfully.",
+                TimeStamp = DateTime.UtcNow
+            };
+
+            await _authContext.Notifications.AddAsync(notification);
 
             await _authContext.SaveChangesAsync();
 
@@ -289,7 +299,16 @@ namespace MealFacility_Backend.Controllers
             // Hash the new password
             user.password = PasswordHasher.HashPassword(changePasswordDto.NewPassword);
 
-            _authContext.Update(user); // Update the existing user
+            _authContext.Update(user); 
+
+            // Create and save the notification
+            var notification = new Notification
+            {
+                UserId = user.Id,
+                Message = "Password changed successfully."
+            };
+
+            await _authContext.Notifications.AddAsync(notification);
 
             await _authContext.SaveChangesAsync();
 
