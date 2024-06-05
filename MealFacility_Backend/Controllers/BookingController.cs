@@ -7,7 +7,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Globalization;
 using MealFacility_Backend.Models.DTO;
 
 namespace MealFacility_Backend.Controllers
@@ -41,18 +40,17 @@ namespace MealFacility_Backend.Controllers
 
             if (bookingObj.BookingStartDate.Date.AddDays(1) <= DateTime.Today)
             {
-                return BadRequest("Booking for today or any past date is not allowed.");
+                return BadRequest("Bookings cannot be made for today or any past dates.");
             }
 
             if (bookingObj.BookingStartDate.Date.AddDays(1) > DateTime.Today.AddMonths(3))
             {
-                return BadRequest("Booking cannot be made more than 3 months in advance.");
+                return BadRequest("Bookings cannot be made more than 3 months in advance.");
             }
 
             var holidays = GetHolidays();
 
             var currentDate = bookingObj.BookingStartDate.Date.AddDays(1);
-
             var endDate = bookingObj.BookingEndDate.Date.AddDays(1);
 
             while (currentDate <= endDate)
@@ -64,12 +62,12 @@ namespace MealFacility_Backend.Controllers
                 }
 
                 var existingBooking = await _authContext.Bookings
-                    .Where(b => b.UserId == user.Id && b.BookingDate == currentDate)
+                    .Where(b => b.UserId == user.Id && b.BookingDate == currentDate && b.BookingType == bookingObj.BookingType)
                     .FirstOrDefaultAsync();
 
                 if (existingBooking != null)
                 {
-                    return BadRequest($"You already have a booking on {existingBooking.BookingDate.ToShortDateString()}.");
+                    return BadRequest($"A {bookingObj.BookingType} booking already exists for {existingBooking.BookingDate.ToShortDateString()}.");
                 }
 
                 var booking = new Booking
@@ -90,7 +88,7 @@ namespace MealFacility_Backend.Controllers
 
             return Ok(new
             {
-                Message = "Your booking was successfully completed!"
+                Message = "Your bookings have been successfully completed."
             });
         }
 
@@ -123,21 +121,21 @@ namespace MealFacility_Backend.Controllers
 
             if (bookingDate <= DateTime.Today)
             {
-                return BadRequest("Booking for today or any past date is not allowed.");
+                return BadRequest("Bookings cannot be made for today or any past dates.");
             }
 
             if (bookingDate == DateTime.Today.AddDays(1) && DateTime.Now.Hour >= 20)
             {
-                return BadRequest("Booking for tomorrow is not allowed after 8 PM today.");
+                return BadRequest("Bookings for tomorrow cannot be made after 8 PM today.");
             }
 
             var existingBooking = await _authContext.Bookings
-                .Where(b => b.UserId == user.Id && b.BookingDate == bookingDate)
+                .Where(b => b.UserId == user.Id && b.BookingDate == bookingDate && b.BookingType == bookingObj.BookingType)
                 .FirstOrDefaultAsync();
 
             if (existingBooking != null)
             {
-                return BadRequest($"You already have a booking on {existingBooking.BookingDate.ToShortDateString()}.");
+                return BadRequest($"A {bookingObj.BookingType} booking already exists for {existingBooking.BookingDate.ToShortDateString()}.");
             }
 
             var booking = new Booking
@@ -155,13 +153,13 @@ namespace MealFacility_Backend.Controllers
 
             return Ok(new
             {
-                Message = "Your booking was successfully completed!"
+                Message = "Your booking has been successfully completed."
             });
         }
 
         [Authorize]
-        [HttpGet("viewUserBookings/{userId}")]
-        public async Task<ActionResult<IEnumerable<DateTime>>> GetBookingsByUserId(int userId)
+        [HttpGet("viewUserBookings")]
+        public async Task<IActionResult> ViewBooking([FromQuery] int userId)
         {
             var user = await _authContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
 
@@ -195,51 +193,72 @@ namespace MealFacility_Backend.Controllers
 
             var cancelDate = cancelBookingDto.Date.Date.AddDays(1);
 
-            var booking = await _authContext.Bookings
-                .Where(b => b.UserId == user.Id && b.BookingDate.Date == cancelDate)
-                .FirstOrDefaultAsync();
-
-            if (booking == null)
+            if (cancelBookingDto.BookingType == "both")
             {
-                return NotFound("Booking not found for the selected date.");
+                // Fetch both lunch and dinner bookings for the user on the specified date
+                var bookings = await _authContext.Bookings
+                    .Where(b => b.UserId == user.Id && b.BookingDate.Date == cancelDate && (b.BookingType == "lunch" || b.BookingType == "dinner"))
+                    .ToListAsync();
+
+                if (bookings == null || bookings.Count == 0)
+                {
+                    return NotFound("No bookings found for the selected date.");
+                }
+
+                foreach (var booking in bookings)
+                {
+                    if (DateTime.Now.Date > cancelDate)
+                    {
+                        return BadRequest("Past bookings cannot be cancelled.");
+                    }
+
+                    if (booking.Status == "Cancelled")
+                    {
+                        return BadRequest($"Your {booking.BookingType} booking for the selected date has already been cancelled.");
+                    }
+
+                    booking.Status = "Cancelled";
+                    _authContext.Entry(booking).State = EntityState.Modified;
+                }
+
+                await _authContext.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    Message = "Lunch and dinner bookings have been successfully cancelled."
+                });
             }
-
-            if (DateTime.Now.Date > cancelDate)
+            else
             {
-                return BadRequest("Cannot cancel past bookings.");
+                var booking = await _authContext.Bookings
+                    .Where(b => b.UserId == user.Id && b.BookingDate.Date == cancelDate && b.BookingType == cancelBookingDto.BookingType)
+                    .FirstOrDefaultAsync();
+
+                if (booking == null)
+                {
+                    return NotFound($"No {cancelBookingDto.BookingType} booking found for the selected date.");
+                }
+
+                if (DateTime.Now.Date > cancelDate)
+                {
+                    return BadRequest("Past bookings cannot be cancelled.");
+                }
+
+                if (booking.Status == "Cancelled")
+                {
+                    return BadRequest($"Your {cancelBookingDto.BookingType} booking for the selected date has already been cancelled.");
+                }
+
+                booking.Status = "Cancelled";
+                _authContext.Entry(booking).State = EntityState.Modified;
+
+                await _authContext.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    Message = $"{cancelBookingDto.BookingType} booking has been successfully cancelled."
+                });
             }
-
-            booking.Status = "Cancelled";
-
-            _authContext.Entry(booking).State = EntityState.Modified;
-
-            await _authContext.SaveChangesAsync();
-
-            var lastBookingDate = await _authContext.Bookings
-                .Where(b => b.UserId == user.Id)
-                .OrderByDescending(b => b.BookingDate)
-                .Select(b => b.BookingDate)
-                .FirstOrDefaultAsync();
-
-            var newBookingDate = GetNextValidDate(lastBookingDate.AddDays(1));
-
-            var newBooking = new Booking
-            {
-                BookingDate = newBookingDate,
-                BookingType = booking.BookingType,
-                UserId = user.Id,
-                Status = "Active",
-                TimeStamp = DateTime.Now
-            };
-
-            await _authContext.Bookings.AddAsync(newBooking);
-
-            await _authContext.SaveChangesAsync();
-
-            return Ok(new
-            {
-                Message = "Booking cancelled successfully."
-            });
         }
 
         private DateTime GetNextValidDate(DateTime startDate)

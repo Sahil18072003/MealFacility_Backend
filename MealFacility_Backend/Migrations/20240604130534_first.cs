@@ -18,7 +18,7 @@ namespace MealFacility_Backend.Migrations
                     firstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     lastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     userName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    email = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     password = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Token = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     GeneratedOTP = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -78,9 +78,8 @@ namespace MealFacility_Backend.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    BookingId = table.Column<int>(type: "int", nullable: false),
                     TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>

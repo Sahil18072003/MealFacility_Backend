@@ -21,7 +21,7 @@ namespace MealFacility_Backend.Services.Services
 
             var from = configuration["EmailSettings:From"];
 
-            emailMessage.From.Add(new MailboxAddress("Food Meal", from));
+            emailMessage.From.Add(new MailboxAddress("Meal Facility", from));
 
             emailMessage.To.Add(new MailboxAddress(email.To, email.To));
 

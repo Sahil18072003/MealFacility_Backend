@@ -232,7 +232,6 @@ namespace MealFacility_Backend.Controllers
             }
 
             // OTP is correct, perform further actions if needed
-
             return Ok(new
             {
                 StatusCode = 200,
@@ -299,23 +298,24 @@ namespace MealFacility_Backend.Controllers
             // Hash the new password
             user.password = PasswordHasher.HashPassword(changePasswordDto.NewPassword);
 
-            _authContext.Update(user); 
+            _authContext.Update(user);
 
             // Create and save the notification
-            var notification = new Notification
+            /*var notification = new Notification
             {
                 UserId = user.Id,
-                Message = "Password changed successfully."
+                Message = "Password change successfully.",
+                TimeStamp = DateTime.Now
             };
 
-            await _authContext.Notifications.AddAsync(notification);
+            await _authContext.Notifications.AddAsync(notification);*/
 
             await _authContext.SaveChangesAsync();
 
             return Ok(new
             {
                 StatusCode = 200,
-                Message = "Password changed successfully",
+                Message = "Password change successfully",
             });
         }
     }

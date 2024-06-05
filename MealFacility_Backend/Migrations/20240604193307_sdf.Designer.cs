@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MealFacility_Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240604051815_first")]
-    partial class first
+    [Migration("20240604193307_sdf")]
+    partial class sdf
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -79,13 +79,12 @@ namespace MealFacility_Backend.Migrations
             modelBuilder.Entity("MealFacility_Backend.Models.Notification", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("BookingId")
-                        .HasColumnType("int");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Message")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("TimeStamp")
@@ -117,7 +116,6 @@ namespace MealFacility_Backend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("firstName")
@@ -149,17 +147,6 @@ namespace MealFacility_Backend.Migrations
                 });
 
             modelBuilder.Entity("MealFacility_Backend.Models.Coupon", b =>
-                {
-                    b.HasOne("MealFacility_Backend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("MealFacility_Backend.Models.Notification", b =>
                 {
                     b.HasOne("MealFacility_Backend.Models.User", "User")
                         .WithMany()
